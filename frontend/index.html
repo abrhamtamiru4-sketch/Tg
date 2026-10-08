@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Telegram Publisher — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── CSS Variables ────────────────────────────────────── */
+:root {
+  --bg:        #0d0f14;
+  --bg2:       #161921;
+  --bg3:       #1e2230;
+  --border:    #2a2f3e;
+  --text:      #e2e6f0;
+  --text2:     #8892a4;
+  --text3:     #5a6478;
+  --accent:    #4f8ef7;
+  --accent2:   #6c63ff;
+  --green:     #22c55e;
+  --yellow:    #f59e0b;
+  --red:       #ef4444;
+  --orange:    #f97316;
+  --purple:    #a855f7;
+  --cyan:      #06b6d4;
+  --radius:    10px;
+  --shadow:    0 4px 24px rgba(0,0,0,.4);
+  --font:      'Inter', system-ui, sans-serif;
+  --mono:      'JetBrains Mono', 'Fira Code', monospace;
+  --sidebar-w: 240px;
+  --header-h:  60px;
+  --trans:     .15s ease;
+}
+[data-theme="light"] {
+  --bg:    #f0f2f7;
+  --bg2:   #ffffff;
+  --bg3:   #e8eaf0;
+  --border:#d0d5e0;
+  --text:  #1a1f2e;
+  --text2: #5a6478;
+  --text3: #8892a4;
+  --shadow:0 4px 24px rgba(0,0,0,.1);
+}
+
+/* ── Reset ───────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* ── Layout ──────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:var(--header-h) 1fr;height:100vh;overflow:hidden}
+.sidebar{grid-row:1/-1;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.header{grid-column:2;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;z-index:10}
+.main{grid-column:2;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.logo{padding:20px 20px 12px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.3px}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.nav-section{padding:8px 12px 4px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;transition:background var(--trans),color var(--trans);color:var(--text2);font-size:13px;font-weight:500}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(108,99,255,.1));color:var(--accent);border:1px solid rgba(79,142,247,.2)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.nav-badge.green{background:var(--green)}
+.nav-badge.yellow{background:var(--yellow)}
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
+.status-bar{display:flex;flex-direction:column;gap:6px}
+.status-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.dot.yellow{background:var(--yellow)}
+.dot.red{background:var(--red)}
+
+/* ── Header ──────────────────────────────────────────── */
+.header-title{font-size:16px;font-weight:600;flex:1}
+.header-actions{display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all var(--trans);white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#3a7be0;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-success{background:var(--green);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:7px 9px;cursor:pointer;color:var(--text2);transition:all var(--trans)}
+.icon-btn:hover{background:var(--bg3);color:var(--text)}
+
+/* ── Cards / Panels ──────────────────────────────────── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:16px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+
+/* ── Stat Cards ──────────────────────────────────────── */
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-color,var(--accent))}
+.stat-label{font-size:12px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:28px;font-weight:700;line-height:1}
+.stat-change{font-size:12px;display:flex;align-items:center;gap:4px}
+.stat-change.up{color:var(--green)}
+.stat-change.down{color:var(--red)}
+.stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:32px;opacity:.12}
+
+/* ── Tables ──────────────────────────────────────────── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+
+/* ── Badges / Chips ──────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-yellow{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge-blue{background:rgba(79,142,247,.15);color:var(--accent)}
+.badge-purple{background:rgba(168,85,247,.15);color:var(--purple)}
+.badge-gray{background:var(--bg3);color:var(--text2)}
+
+/* ── Forms ───────────────────────────────────────────── */
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2)}
+.form-input,.form-select,.form-textarea{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);outline:none;transition:border-color var(--trans);width:100%}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+.form-textarea{resize:vertical;min-height:100px;font-family:var(--font)}
+
+/* ── Composer ────────────────────────────────────────── */
+.composer{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius)}
+.composer-toolbar{display:flex;align-items:center;gap:4px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.fmt-btn{background:none;border:none;padding:5px 8px;border-radius:6px;cursor:pointer;color:var(--text2);font-size:13px;transition:all var(--trans)}
+.fmt-btn:hover{background:var(--bg3);color:var(--text)}
+.fmt-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.composer-body{position:relative}
+#compose-text{width:100%;background:transparent;border:none;outline:none;padding:16px;font-size:14px;min-height:160px;resize:none;font-family:var(--font)}
+.char-count{position:absolute;bottom:10px;right:14px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.char-count.warn{color:var(--yellow)}
+.char-count.over{color:var(--red)}
+.composer-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* ── Preview Panel ───────────────────────────────────── */
+.tg-preview{background:#17212b;border-radius:12px;padding:16px;max-width:380px;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5}
+.tg-bubble{background:#1e2b36;border-radius:10px 10px 10px 3px;padding:12px 14px;position:relative;color:#e2e8f0}
+.tg-bubble::after{content:'';position:absolute;bottom:0;left:-8px;width:0;height:0;border:8px solid transparent;border-top-color:#1e2b36;border-right:0;border-bottom:0}
+.tg-time{text-align:right;font-size:11px;color:#62809a;margin-top:4px}
+.tg-btn-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tg-btn{background:#1e2b36;border:none;border-radius:8px;padding:8px 12px;color:#4d9cf0;font-size:13px;font-weight:500;cursor:pointer;flex:1;text-align:center}
+.tg-btn:hover{background:#243342}
+
+/* ── Queue Visualization ─────────────────────────────── */
+.queue-bars{display:flex;flex-direction:column;gap:8px}
+.queue-bar{display:flex;align-items:center;gap:12px}
+.queue-bar-label{font-size:12px;color:var(--text2);width:80px;flex-shrink:0}
+.queue-bar-track{flex:1;background:var(--bg3);border-radius:4px;height:8px;overflow:hidden}
+.queue-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.queue-bar-count{font-size:12px;color:var(--text2);width:40px;text-align:right;font-family:var(--mono)}
+
+/* ── Toast Notifications ─────────────────────────────── */
+.toast-container{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:999}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px;min-width:280px;max-width:360px;box-shadow:var(--shadow);animation:slideIn .2s ease;font-size:13px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.warning{border-left:3px solid var(--yellow)}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+
+/* ── Capability Matrix ────────────────────────────────── */
+.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.cap-item{background:var(--bg3);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:12px}
+.cap-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cap-dot.available{background:var(--green)}
+.cap-dot.versioned{background:var(--cyan)}
+.cap-dot.future{background:var(--text3)}
+.cap-dot.unsupported{background:var(--red)}
+
+/* ── Feature Flag Toggles ────────────────────────────── */
+.toggle{display:flex;align-items:center;gap:10px;padding:10px 0}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--bg3);border-radius:11px;cursor:pointer;transition:background var(--trans)}
+.toggle-switch input:checked + .toggle-track{background:var(--accent)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform var(--trans)}
+.toggle-switch input:checked ~ .toggle-thumb{transform:translateX(18px)}
+.toggle-label{flex:1;font-size:13px}
+.toggle-meta{font-size:11px;color:var(--text3)}
+
+/* ── Modals ──────────────────────────────────────────── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;place-items:center;padding:20px}
+.modal-backdrop.open{display:grid}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;max-height:80vh;overflow-y:auto}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:600}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.close-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;line-height:1;padding:2px 6px;border-radius:4px}
+.close-btn:hover{background:var(--bg3);color:var(--text)}
+
+/* ── Page transitions ────────────────────────────────── */
+.page{display:none}
+.page.active{display:contents}
+.fade-in{animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;grid-template-rows:var(--header-h) 1fr}
+  .sidebar{display:none}
+  .header{grid-column:1}
+  .main{grid-column:1;padding:16px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+}
+
+/* ── Misc ────────────────────────────────────────────── */
+.divider{height:1px;background:var(--border);margin:8px 0}
+.spacer{flex:1}
+.text-2{color:var(--text2)}
+.text-3{color:var(--text3)}
+.mono{font-family:var(--mono)}
+.flex{display:flex;align-items:center;gap:8px}
+.empty-state{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty-state .icon{font-size:40px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">📡</div>
+    <span>TG Publisher</span>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)">
+    <span class="icon">⚡</span> Dashboard
+  </div>
+  <div class="nav-item" onclick="showPage('analytics',this)">
+    <span class="icon">📊</span> Analytics
+  </div>
+
+  <div class="nav-section">Content</div>
+  <div class="nav-item" onclick="showPage('compose',this)">
+    <span class="icon">✏️</span> Compose
+  </div>
+  <div class="nav-item" onclick="showPage('posts',this)">
+    <span class="icon">📮</span> Posts
+    <span class="nav-badge" id="draft-count">0</span>
+  </div>
+  <div class="nav-item" onclick="showPage('media',this)">
+    <span class="icon">🖼</span> Media Library
+  </div>
+  <div class="nav-item" onclick="showPage('templates',this)">
+    <span class="icon">🧩</span> Templates
+  </div>
+
+  <div class="nav-section">Distribution</div>
+  <div class="nav-item" onclick="showPage('channels',this)">
+    <span class="icon">📡</span> Channels
+  </div>
+  <div class="nav-item" onclick="showPage('scheduler',this)">
+    <span class="icon">📅</span> Scheduler
+  </div>
+  <div class="nav-item" onclick="showPage('campaigns',this)">
+    <span class="icon">🎯</span> Campaigns
+  </div>
+  <div class="nav-item" onclick="showPage('sources',this)">
+    <span class="icon">📡</span> Sources
+  </div>
+
+  <div class="nav-section">Intelligence</div>
+  <div class="nav-item" onclick="showPage('automation',this)">
+    <span class="icon">⚙️</span> Automation
+  </div>
+  <div class="nav-item" onclick="showPage('ai',this)">
+    <span class="icon">🤖</span> AI Assistant
+  </div>
+
+  <div class="nav-section">System</div>
+  <div class="nav-item" onclick="showPage('queue',this)">
+    <span class="icon">📋</span> Queue
+    <span class="nav-badge yellow" id="queue-count">0</span>
+  </div>
+  <div class="nav-item" onclick="showPage('capabilities',this)">
+    <span class="icon">🔌</span> API Capabilities
+  </div>
+  <div class="nav-item" onclick="showPage('settings',this)">
+    <span class="icon">🔧</span> Settings
+  </div>
+  <div class="nav-item" onclick="showPage('audit',this)">
+    <span class="icon">🛡</span> Audit Log
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="status-bar" id="status-bar">
+      <div class="status-item"><div class="dot"></div> Telegram API</div>
+      <div class="status-item"><div class="dot"></div> Database</div>
+      <div class="status-item"><div class="dot yellow"></div> Redis</div>
+    </div>
+    <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+      <span class="text-3" style="font-size:11px">v1.0.0 · API 10.3</span>
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="header">
+  <div class="header-title" id="page-title">Dashboard</div>
+  <div class="header-actions">
+    <div style="position:relative">
+      <input class="form-input" placeholder="🔍 Search..." style="width:220px;padding:7px 12px" id="global-search" oninput="onSearch(this.value)">
+    </div>
+    <button class="btn btn-primary" onclick="openModal('compose-modal')">
+      ✏️ New Post
+    </button>
+    <button class="icon-btn" onclick="refreshData()" title="Refresh">🔄</button>
+    <button class="icon-btn" id="dry-run-badge" title="DRY RUN mode active" style="display:none;color:var(--yellow);border-color:var(--yellow)">⚠ DRY</button>
+  </div>
+</header>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="main" id="main-content">
+
+<!-- ─── DASHBOARD ─────────────────────────── -->
+<section class="page active" id="page-dashboard">
+  <div class="grid grid-4 fade-in">
+    <div class="stat-card" style="--accent-color:var(--accent)">
+      <span class="stat-label">Published</span>
+      <span class="stat-value" id="stat-published">—</span>
+      <span class="stat-change up" id="stat-published-change">Loading…</span>
+      <span class="stat-icon">✅</span>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--green)">
+      <span class="stat-label">Scheduled</span>
+      <span class="stat-value" id="stat-scheduled">—</span>
+      <span class="stat-change" id="stat-scheduled-change" style="color:var(--text2)">upcoming</span>
+      <span class="stat-icon">📅</span>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--red)">
+      <span class="stat-label">Failed</span>
+      <span class="stat-value" id="stat-failed">—</span>
+      <span class="stat-change down" id="stat-failed-change">needs action</span>
+      <span class="stat-icon">❌</span>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--purple)">
+      <span class="stat-label">Channels</span>
+      <span class="stat-value" id="stat-channels">—</span>
+      <span class="stat-change" style="color:var(--text2)" id="stat-channels-change">active</span>
+      <span class="stat-icon">📡</span>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <!-- Queue Status -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">📋</span> Queue Status</div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('queue',null)">View All</button>
+      </div>
+      <div class="queue-bars" id="queue-bars">
+        <div class="queue-bar">
+          <span class="queue-bar-label">Pending</span>
+          <div class="queue-bar-track"><div class="queue-bar-fill" style="width:0%;background:var(--accent)"></div></div>
+          <span class="queue-bar-count" id="q-pending">0</span>
+        </div>
+        <div class="queue-bar">
+          <span class="queue-bar-label">Running</span>
+          <div class="queue-bar-track"><div class="queue-bar-fill" style="width:0%;background:var(--yellow)"></div></div>
+          <span class="queue-bar-count" id="q-running">0</span>
+        </div>
+        <div class="queue-bar">
+          <span class="queue-bar-label">Success</span>
+          <div class="queue-bar-track"><div class="queue-bar-fill" style="width:0%;background:var(--green)"></div></div>
+          <span class="queue-bar-count" id="q-success">0</span>
+        </div>
+        <div class="queue-bar">
+          <span class="queue-bar-label">Failed</span>
+          <div class="queue-bar-track"><div class="queue-bar-fill" style="width:0%;background:var(--red)"></div></div>
+          <span class="queue-bar-count" id="q-failed">0</span>
+        </div>
+        <div class="queue-bar">
+          <span class="queue-bar-label">Dead</span>
+          <div class="queue-bar-track"><div class="queue-bar-fill" style="width:0%;background:var(--text3)"></div></div>
+          <span class="queue-bar-count" id="q-dead">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">🔧</span> System Health</div>
+        <button class="btn btn-ghost btn-sm" onclick="checkHealth()">Refresh</button>
+      </div>
+      <div id="health-checks" style="display:flex;flex-direction:column;gap:8px">
+        <div class="status-item" style="font-size:13px">
+          <div class="dot" id="h-telegram"></div>
+          <span>Telegram API v10.3</span>
+        </div>
+        <div class="status-item" style="font-size:13px">
+          <div class="dot" id="h-database"></div>
+          <span>Database</span>
+        </div>
+        <div class="status-item" style="font-size:13px">
+          <div class="dot yellow" id="h-redis"></div>
+          <span>Redis / Queue</span>
+        </div>
+        <div class="status-item" style="font-size:13px">
+          <div class="dot red" id="h-ai"></div>
+          <span>AI Provider</span>
+        </div>
+        <div class="status-item" style="font-size:13px">
+          <div class="dot" id="h-scheduler"></div>
+          <span>Scheduler</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Posts -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📮</span> Recent Posts</div>
+      <button class="btn btn-ghost btn-sm" onclick="showPage('posts',null)">View All</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Title / Preview</th><th>Type</th><th>Status</th><th>Channels</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="recent-posts">
+          <tr><td colspan="7"><div class="empty-state"><div class="spinner" style="margin:auto"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── COMPOSE ────────────────────────────── -->
+<section class="page" id="page-compose">
+  <div class="grid grid-2 fade-in" style="gap:20px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-header"><div class="card-title"><span class="icon">✏️</span> Post Composer</div></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Post Type</label>
+            <select class="form-select" id="compose-type" onchange="onTypeChange(this.value)">
+              <option value="text">📝 Text</option>
+              <option value="photo">🖼 Photo</option>
+              <option value="video">🎬 Video</option>
+              <option value="audio">🎵 Audio</option>
+              <option value="document">📄 Document</option>
+              <option value="animation">🎞 Animation</option>
+              <option value="media_group">🖼🖼 Album</option>
+              <option value="poll">🗳 Poll</option>
+              <option value="rich">⚡ Rich (API 10.1+)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Language</label>
+            <select class="form-select" id="compose-lang">
+              <option value="en">🇺🇸 English</option>
+              <option value="am">🇪🇹 Amharic</option>
+              <option value="ar">🇸🇦 Arabic</option>
+              <option value="fr">🇫🇷 French</option>
+              <option value="es">🇪🇸 Spanish</option>
+              <option value="de">🇩🇪 German</option>
+              <option value="tr">🇹🇷 Turkish</option>
+              <option value="zh">🇨🇳 Chinese</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Title (optional)</label>
+          <input class="form-input" id="compose-title" placeholder="Post title for your reference…">
+        </div>
+
+        <div class="composer">
+          <div class="composer-toolbar">
+            <button class="fmt-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button>
+            <button class="fmt-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button>
+            <button class="fmt-btn" onclick="fmt('underline')" title="Underline"><u>U</u></button>
+            <button class="fmt-btn" onclick="fmt('strike')" title="Strike"><s>S</s></button>
+            <button class="fmt-btn" onclick="fmt('code')" title="Code"><code style="font-size:11px">&lt;&gt;</code></button>
+            <div class="fmt-sep"></div>
+            <button class="fmt-btn" onclick="fmt('link')" title="Link">🔗</button>
+            <button class="fmt-btn" onclick="fmt('spoiler')" title="Spoiler">👁</button>
+            <div class="fmt-sep"></div>
+            <button class="fmt-btn" onclick="insertEmoji()" title="Emoji">😀</button>
+            <button class="fmt-btn" onclick="insertHashtag()" title="Hashtag">#️⃣</button>
+            <div class="fmt-sep"></div>
+            <button class="fmt-btn" onclick="insertTemplate()" title="Insert template">🧩</button>
+            <button class="fmt-btn" style="color:var(--purple)" onclick="aiAssist()" title="AI rewrite">✨ AI</button>
+          </div>
+          <div class="composer-body">
+            <textarea id="compose-text" placeholder="Write your post… HTML formatting supported: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;a href='…'&gt;link&lt;/a&gt;" oninput="onTextInput()"></textarea>
+            <span class="char-count" id="char-count">0 / 4096</span>
+          </div>
+          <div class="composer-footer">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="checkDuplicates()">🔍 Check Dups</button>
+              <button class="btn btn-ghost btn-sm" onclick="runPreflight()">✓ Preflight</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="saveDraft()">💾 Draft</button>
+              <button class="btn btn-ghost btn-sm" onclick="schedulePost()">📅 Schedule</button>
+              <button class="btn btn-primary btn-sm" onclick="publishNow()">🚀 Publish</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Button Builder -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🔘</span> Button Builder</div>
+          <button class="btn btn-ghost btn-sm" onclick="addButton()">+ Add</button>
+        </div>
+        <div id="buttons-list" style="display:flex;flex-direction:column;gap:6px">
+          <div class="text-3" style="font-size:12px;padding:8px 0">No buttons added. Click + Add to create inline buttons.</div>
+        </div>
+      </div>
+
+      <!-- Channel Selector -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">📡</span> Target Channels</div>
+        </div>
+        <div id="channel-selector" style="display:flex;flex-direction:column;gap:6px">
+          <div class="text-3" style="font-size:12px;padding:8px 0">Loading channels…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">👁</span> Live Preview</div>
+          <span class="badge badge-blue">Telegram</span>
+        </div>
+        <div class="tg-preview">
+          <div class="tg-bubble" id="preview-bubble">
+            <span style="color:var(--text2);font-size:12px">Your post will appear here…</span>
+          </div>
+          <div class="tg-time">12:34 ✓✓</div>
+          <div class="tg-btn-row" id="preview-buttons"></div>
+        </div>
+      </div>
+
+      <!-- Preflight Results -->
+      <div class="card" id="preflight-card" style="display:none">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">✓</span> Pre-flight Checks</div>
+        </div>
+        <div id="preflight-results" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── POSTS ──────────────────────────────── -->
+<section class="page" id="page-posts">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📮</span> All Posts</div>
+      <div style="display:flex;gap:8px">
+        <select class="form-select" style="width:140px" id="posts-filter" onchange="loadPosts()">
+          <option value="">All Statuses</option>
+          <option value="draft">Draft</option>
+          <option value="approved">Approved</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="published">Published</option>
+          <option value="failed">Failed</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="showPage('compose',null)">+ New Post</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" onchange="selectAllPosts(this)"></th>
+            <th>#</th><th>Preview</th><th>Type</th><th>Status</th>
+            <th>Targets</th><th>Scheduled</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="all-posts-body">
+          <tr><td colspan="8"><div class="empty-state"><div class="spinner" style="margin:auto"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="posts-bulk-actions" style="display:none;padding:12px 0;gap:8px;display:flex">
+      <button class="btn btn-ghost btn-sm">📅 Schedule Selected</button>
+      <button class="btn btn-ghost btn-sm">📋 Duplicate Selected</button>
+      <button class="btn btn-danger btn-sm">🗑 Delete Selected</button>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CHANNELS ───────────────────────────── -->
+<section class="page" id="page-channels">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📡</span> Channels</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('add-channel-modal')">+ Add Channel</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Channel</th><th>@Username</th><th>Members</th><th>Bot Admin</th><th>Can Post</th><th>Verified</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="channels-body">
+          <tr><td colspan="7"><div class="empty-state"><div class="spinner" style="margin:auto"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SCHEDULER ─────────────────────────── -->
+<section class="page" id="page-scheduler">
+  <div class="grid grid-2 fade-in">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">📅</span> Upcoming Schedule</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadScheduler()">🔄 Refresh</button>
+      </div>
+      <div id="schedule-list" style="display:flex;flex-direction:column;gap:8px">
+        <div class="text-3 empty-state"><div class="icon">📅</div><p>No upcoming posts scheduled.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">⏰</span> New Schedule</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Post</label>
+          <select class="form-select" id="sched-post-id">
+            <option value="">Select a post…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Schedule Type</label>
+          <select class="form-select" id="sched-type" onchange="onSchedTypeChange(this.value)">
+            <option value="once">One-time</option>
+            <option value="recurring">Recurring (Cron)</option>
+          </select>
+        </div>
+        <div class="form-group" id="sched-datetime-group">
+          <label class="form-label">Date & Time</label>
+          <input type="datetime-local" class="form-input" id="sched-datetime">
+        </div>
+        <div class="form-group" id="sched-cron-group" style="display:none">
+          <label class="form-label">Cron Expression</label>
+          <input class="form-input mono" id="sched-cron" placeholder="0 8,12,18 * * 1-5">
+          <small class="text-3">Example: Every Mon-Fri at 08:00, 12:00, 18:00</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Timezone</label>
+          <select class="form-select" id="sched-tz">
+            <option value="Africa/Addis_Ababa">Africa/Addis_Ababa (EAT)</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">America/New_York (EST)</option>
+            <option value="Europe/London">Europe/London (GMT)</option>
+            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="createSchedule()">📅 Create Schedule</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ANALYTICS ─────────────────────────── -->
+<section class="page" id="page-analytics">
+  <div class="grid grid-4 fade-in">
+    <div class="stat-card" style="--accent-color:var(--green)">
+      <span class="stat-label">Total Posts</span>
+      <span class="stat-value" id="an-total">—</span>
+      <span class="stat-icon">📮</span>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--accent)">
+      <span class="stat-label">Published</span>
+      <span class="stat-value" id="an-published">—</span>
+      <span class="stat-icon">✅</span>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--red)">
+      <span class="stat-label">Failed</span>
+      <span class="stat-value" id="an-failed">—</span>
+      <span class="stat-icon">❌</span>
+    </div>
+    <div class="stat-card" style="--accent-color:var(--purple)">
+      <span class="stat-label">Events Tracked</span>
+      <span class="stat-value" id="an-events">—</span>
+      <span class="stat-icon">📊</span>
+    </div>
+  </div>
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📋</span> Recent Events</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Post</th><th>Time</th></tr></thead>
+        <tbody id="events-body">
+          <tr><td colspan="3"><div class="empty-state"><div class="spinner" style="margin:auto"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── QUEUE ──────────────────────────────── -->
+<section class="page" id="page-queue">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📋</span> Job Queue</div>
+      <button class="btn btn-ghost btn-sm" onclick="loadQueue()">🔄 Refresh</button>
+    </div>
+    <div id="queue-detail" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Job ID</th><th>Type</th><th>Post</th><th>Status</th><th>Attempts</th><th>Created</th><th>Error</th></tr></thead>
+        <tbody id="queue-body">
+          <tr><td colspan="7"><div class="empty-state"><div class="spinner" style="margin:auto"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CAPABILITIES ──────────────────────── -->
+<section class="page" id="page-capabilities">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🔌</span> Telegram API Capability Matrix</div>
+      <span class="badge badge-blue" id="cap-version">Bot API 10.3</span>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="flex"><div class="cap-dot available"></div><span class="text-2" style="font-size:12px">Available</span></div>
+      <div class="flex"><div class="cap-dot versioned"></div><span class="text-2" style="font-size:12px">Versioned</span></div>
+      <div class="flex"><div class="cap-dot future"></div><span class="text-2" style="font-size:12px">Future</span></div>
+      <div class="flex"><div class="cap-dot unsupported"></div><span class="text-2" style="font-size:12px">Unavailable</span></div>
+    </div>
+    <div class="cap-grid" id="cap-grid">
+      <div class="empty-state"><div class="spinner" style="margin:auto;grid-column:1/-1"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SETTINGS ──────────────────────────── -->
+<section class="page" id="page-settings">
+  <div class="grid grid-2 fade-in">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="icon">🚩</span> Feature Flags</div></div>
+      <div id="feature-flags" style="display:flex;flex-direction:column;gap:0">
+        <div class="empty-state"><div class="spinner" style="margin:auto"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="icon">⚙️</span> Configuration</div></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Default Timezone</label>
+          <select class="form-select">
+            <option>Africa/Addis_Ababa</option>
+            <option>UTC</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Parse Mode</label>
+          <select class="form-select">
+            <option>HTML</option>
+            <option>MarkdownV2</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Log Level</label>
+          <select class="form-select">
+            <option>INFO</option>
+            <option>DEBUG</option>
+            <option>WARNING</option>
+          </select>
+        </div>
+        <div class="toggle">
+          <label class="toggle-switch">
+            <input type="checkbox" id="dry-run-toggle">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+          <div class="toggle-label">
+            DRY RUN Mode
+            <div class="toggle-meta">Simulate publishes without sending real messages</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── AI ASSISTANT ──────────────────────── -->
+<section class="page" id="page-ai">
+  <div class="grid grid-2 fade-in">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="icon">🤖</span> AI Content Assistant</div></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Operation</label>
+          <select class="form-select" id="ai-op">
+            <option value="generate">✨ Generate Post</option>
+            <option value="rewrite">🔄 Rewrite</option>
+            <option value="summarize">📝 Summarize</option>
+            <option value="expand">📖 Expand</option>
+            <option value="translate">🌐 Translate</option>
+            <option value="hashtags">🏷 Generate Hashtags</option>
+            <option value="cta">📣 Generate CTA</option>
+            <option value="variants">🅰🅱 A/B Variants</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Input Text / Topic</label>
+          <textarea class="form-textarea" id="ai-input" placeholder="Paste text or describe your topic…"></textarea>
+        </div>
+        <div class="form-group" id="ai-lang-group">
+          <label class="form-label">Target Language (for translate)</label>
+          <select class="form-select" id="ai-lang">
+            <option value="am">🇪🇹 Amharic</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ar">🇸🇦 Arabic</option>
+            <option value="fr">🇫🇷 French</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="runAI()">✨ Run AI</button>
+        <div id="ai-status" class="text-3" style="font-size:12px;display:none">⚠ AI is disabled. Enable FEATURE_AI=true in .env and configure an AI provider.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="icon">📄</span> AI Output</div></div>
+      <div id="ai-output" style="min-height:200px;font-size:13px;line-height:1.7;color:var(--text2)">
+        <div class="text-3 empty-state"><div class="icon">🤖</div><p>AI output will appear here.<br>Requires AI provider configured.</p></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px" id="ai-actions" style="display:none">
+        <button class="btn btn-primary btn-sm" onclick="useAIOutput()">Use in Composer</button>
+        <button class="btn btn-ghost btn-sm" onclick="copyAIOutput()">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── AUTOMATION ────────────────────────── -->
+<section class="page" id="page-automation">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">⚙️</span> Automation Workflows</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('workflow-modal')">+ New Workflow</button>
+    </div>
+    <div id="workflows-list">
+      <div class="empty-state"><div class="icon">⚙️</div><p>No workflows yet.<br>Create WHEN/IF/THEN automation rules.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SOURCES ────────────────────────────── -->
+<section class="page" id="page-sources">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📡</span> Content Sources</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('source-modal')">+ Add Source</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Type</th><th>URL</th><th>Interval</th><th>Last Fetch</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="sources-body">
+          <tr><td colspan="7"><div class="empty-state"><div class="spinner" style="margin:auto"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── AUDIT ──────────────────────────────── -->
+<section class="page" id="page-audit">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🛡</span> Audit Log</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>Result</th></tr></thead>
+        <tbody id="audit-body">
+          <tr><td colspan="5"><div class="empty-state"><div class="icon">🛡</div><p>Audit log is empty.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ─── TEMPLATES ─────────────────────────── -->
+<section class="page" id="page-templates">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🧩</span> Templates</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('template-modal')">+ New Template</button>
+    </div>
+    <div id="templates-grid" class="grid grid-3" style="gap:12px">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">🧩</div>
+        <p>No templates. Create reusable post templates with <code>{{variables}}</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CAMPAIGNS ────────────────────────── -->
+<section class="page" id="page-campaigns">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🎯</span> Campaigns</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('campaign-modal')">+ New Campaign</button>
+    </div>
+    <div id="campaigns-list">
+      <div class="empty-state"><div class="icon">🎯</div><p>No campaigns. Group posts into campaigns for coordinated publishing.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── MEDIA ──────────────────────────────── -->
+<section class="page" id="page-media">
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🖼</span> Media Library</div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" style="width:160px" placeholder="🔍 Search…">
+        <label class="btn btn-primary btn-sm" style="cursor:pointer">
+          📤 Upload
+          <input type="file" style="display:none" accept="image/*,video/*,audio/*" onchange="uploadMedia(this)">
+        </label>
+      </div>
+    </div>
+    <div id="media-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+      <div class="empty-state" style="grid-column:1/-1"><div class="icon">🖼</div><p>No media. Upload photos, videos, and documents.</p></div>
+    </div>
+  </div>
+</section>
+
+</main><!-- end main -->
+</div><!-- end app -->
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- Compose Quick Modal -->
+<div class="modal-backdrop" id="compose-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Quick Post</div>
+      <button class="close-btn" onclick="closeModal('compose-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Text</label>
+        <textarea class="form-textarea" id="quick-text" placeholder="Post content…" rows="5"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Channel</label>
+        <select class="form-select" id="quick-channel"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('compose-modal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="saveQuickDraft()">💾 Draft</button>
+      <button class="btn btn-primary" onclick="quickPublish()">🚀 Publish Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Channel Modal -->
+<div class="modal-backdrop" id="add-channel-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📡 Add Channel</div>
+      <button class="close-btn" onclick="closeModal('add-channel-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Channel ID or @username</label>
+        <input class="form-input" id="new-channel-id" placeholder="-1001234567890 or @channelname">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Display Title</label>
+        <input class="form-input" id="new-channel-title" placeholder="My Channel">
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;font-size:12px;color:var(--text2)">
+        ℹ️ Make sure the bot is added as an administrator with <b>Post Messages</b> permission before adding it here.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-channel-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addChannel()">Add & Verify</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- ══════════════════ JAVASCRIPT ══════════════════ -->
+<script>
+const API = '/api/v1';
+let currentPage = 'dashboard';
+let channelList = [];
+
+// ── Page routing ──────────────────────────────────────────────
+function showPage(name, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  currentPage = name;
+  const titles = {
+    dashboard:'Dashboard', compose:'Post Composer', posts:'Posts',
+    channels:'Channels', scheduler:'Scheduler', analytics:'Analytics',
+    queue:'Job Queue', capabilities:'API Capabilities', settings:'Settings',
+    ai:'AI Assistant', automation:'Automation', sources:'Sources',
+    audit:'Audit Log', templates:'Templates', campaigns:'Campaigns', media:'Media',
+  };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  loadPageData(name);
+}
+
+function loadPageData(name) {
+  switch(name) {
+    case 'dashboard':   loadDashboard(); break;
+    case 'posts':       loadPosts(); break;
+    case 'channels':    loadChannels(); break;
+    case 'analytics':   loadAnalytics(); break;
+    case 'queue':       loadQueue(); break;
+    case 'capabilities':loadCapabilities(); break;
+    case 'settings':    loadSettings(); break;
+    case 'sources':     loadSources(); break;
+    case 'compose':     loadComposeChannels(); break;
+  }
+}
+
+// ── API helpers ───────────────────────────────────────────────
+async function api(path, opts = {}) {
+  try {
+    const r = await fetch(API + path, {
+      headers: {'Content-Type':'application/json', ...opts.headers},
+      ...opts,
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+async function loadDashboard() {
+  const [summary, queueData, channels, health] = await Promise.all([
+    api('/analytics/summary'),
+    api('/scheduler/queue'),
+    api('/channels/'),
+    fetch('/ready').then(r=>r.json()).catch(()=>null),
+  ]);
+
+  if (summary) {
+    document.getElementById('stat-published').textContent = summary.published ?? '—';
+    document.getElementById('stat-failed').textContent    = summary.failed ?? '—';
+    document.getElementById('stat-published-change').textContent = `${summary.total_posts ?? 0} total posts`;
+  }
+  if (channels) {
+    document.getElementById('stat-channels').textContent = channels.length;
+    document.getElementById('stat-channels-change').textContent = channels.filter(c=>c.is_active).length + ' active';
+  }
+
+  if (queueData) {
+    const total = Object.values(queueData).reduce((a,b)=>a+b,0) || 1;
+    const updateBar = (id, key, color) => {
+      const count = queueData[key] || 0;
+      document.getElementById('q-'+id).textContent = count;
+      const fill = document.querySelector(`#q-${id}`).closest('.queue-bar')?.querySelector('.queue-bar-fill');
+      if (fill) fill.style.width = Math.min(100,(count/total)*100) + '%';
+    };
+    updateBar('pending','pending','var(--accent)');
+    updateBar('running','running','var(--yellow)');
+    updateBar('success','success','var(--green)');
+    updateBar('failed','failed','var(--red)');
+    updateBar('dead','dead','var(--text3)');
+    const pending = (queueData.pending||0) + (queueData.running||0);
+    document.getElementById('queue-count').textContent = pending;
+    document.getElementById('stat-scheduled').textContent = queueData.pending || 0;
+  }
+
+  if (health) {
+    const setDot = (id, status) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'dot' + (status==='ok'?'':status?(' '+status):'');
+    };
+    if (health.checks) {
+      setDot('h-telegram', health.checks.telegram==='ok'?'':'red');
+      setDot('h-database', health.checks.database==='ok'?'':'red');
+      setDot('h-redis', health.checks.redis==='ok'?'yellow':'red');
+    }
+    setDot('h-scheduler','');
+    setDot('h-ai','red');
+  }
+
+  loadRecentPosts();
+}
+
+async function loadRecentPosts() {
+  const posts = await api('/posts/?limit=8');
+  const tbody = document.getElementById('recent-posts');
+  if (!posts || !posts.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📮</div><p>No posts yet. Create your first post!</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = posts.map(p => `
+    <tr>
+      <td class="mono text-3" style="font-size:11px">#${p.id}</td>
+      <td><div class="truncate">${escHtml(p.title || p.text || '(untitled)').substring(0,60)}</div></td>
+      <td><span class="badge badge-gray">${p.post_type}</span></td>
+      <td>${statusBadge(p.status)}</td>
+      <td>—</td>
+      <td class="text-3" style="font-size:12px">${fmtDate(p.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="publishPostId(${p.id})">🚀</button>
+          <button class="btn btn-ghost btn-sm" onclick="duplicatePost(${p.id})">📋</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  document.getElementById('draft-count').textContent = posts.filter(p=>p.status==='draft').length || '';
+}
+
+// ── Posts ─────────────────────────────────────────────────────
+async function loadPosts() {
+  const status = document.getElementById('posts-filter')?.value || '';
+  const posts = await api('/posts/?limit=100' + (status ? `&status=${status}` : ''));
+  const tbody = document.getElementById('all-posts-body');
+  if (!posts) { tbody.innerHTML = '<tr><td colspan="8">Failed to load</td></tr>'; return; }
+  if (!posts.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="icon">📮</div><p>No posts found.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = posts.map(p => `
+    <tr>
+      <td><input type="checkbox" value="${p.id}"></td>
+      <td class="mono text-3">#${p.id}</td>
+      <td><div class="truncate">${escHtml(p.title || p.text || '').substring(0,60)}</div></td>
+      <td><span class="badge badge-gray">${p.post_type}</span></td>
+      <td>${statusBadge(p.status)}</td>
+      <td>—</td>
+      <td class="text-3" style="font-size:12px">${p.scheduled_at ? fmtDate(p.scheduled_at) : '—'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="publishPostId(${p.id})" title="Publish">🚀</button>
+          <button class="btn btn-ghost btn-sm" onclick="duplicatePost(${p.id})" title="Duplicate">📋</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePost(${p.id})" title="Archive">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── Channels ──────────────────────────────────────────────────
+async function loadChannels() {
+  const channels = await api('/channels/');
+  const tbody = document.getElementById('channels-body');
+  if (!channels || !channels.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📡</div><p>No channels. Add a channel to get started.</p></div></td></tr>`;
+    return;
+  }
+  channelList = channels;
+  tbody.innerHTML = channels.map(ch => `
+    <tr>
+      <td><b>${escHtml(ch.title || ch.username || 'Unnamed')}</b></td>
+      <td class="text-2">${ch.username ? '@'+ch.username : '—'}</td>
+      <td class="mono">${ch.member_count?.toLocaleString() || '—'}</td>
+      <td>${ch.bot_is_admin ? '<span class="badge badge-green">✓ Admin</span>' : '<span class="badge badge-red">✗</span>'}</td>
+      <td>${ch.can_post_messages ? '<span class="badge badge-green">✓</span>' : '<span class="badge badge-red">✗</span>'}</td>
+      <td class="text-3" style="font-size:11px">${ch.last_verified_at ? fmtDate(ch.last_verified_at) : 'Never'}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="verifyChannel(${ch.id})">✓ Verify</button>
+          <button class="btn btn-danger btn-sm" onclick="removeChannel(${ch.id})">Remove</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── Analytics ─────────────────────────────────────────────────
+async function loadAnalytics() {
+  const [summary, events] = await Promise.all([api('/analytics/summary'), api('/analytics/events')]);
+  if (summary) {
+    document.getElementById('an-total').textContent     = summary.total_posts ?? '—';
+    document.getElementById('an-published').textContent = summary.published ?? '—';
+    document.getElementById('an-failed').textContent    = summary.failed ?? '—';
+    document.getElementById('an-events').textContent    = summary.events ?? '—';
+  }
+  const tbody = document.getElementById('events-body');
+  if (events && events.length) {
+    tbody.innerHTML = events.slice(0,30).map(e => `
+      <tr>
+        <td><span class="badge badge-blue">${e.type}</span></td>
+        <td class="text-2">${e.post_id ? '#'+e.post_id : '—'}</td>
+        <td class="text-3" style="font-size:11px">${fmtDate(e.created_at)}</td>
+      </tr>
+    `).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="icon">📊</div><p>No events yet.</p></div></td></tr>';
+  }
+}
+
+// ── Queue ─────────────────────────────────────────────────────
+async function loadQueue() {
+  const data = await api('/scheduler/queue');
+  const detail = document.getElementById('queue-detail');
+  if (data) {
+    const colors = {pending:'var(--accent)',running:'var(--yellow)',success:'var(--green)',
+                    failed:'var(--red)',dead:'var(--text3)',retrying:'var(--orange)',cancelled:'var(--text3)'};
+    detail.innerHTML = Object.entries(data).map(([k,v]) => `
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:80px;font-size:12px;color:var(--text2)">${k}</span>
+        <div style="flex:1;background:var(--bg3);border-radius:4px;height:6px;overflow:hidden">
+          <div style="height:100%;background:${colors[k]||'var(--text3)'};width:${Math.min(100,v)}px;min-width:${v>0?4:0}px;border-radius:4px"></div>
+        </div>
+        <span class="mono" style="font-size:12px;width:30px;text-align:right;color:var(--text2)">${v}</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('queue-body').innerHTML =
+    '<tr><td colspan="7"><div class="empty-state"><div class="icon">📋</div><p>Job history loads from the database in production.</p></div></td></tr>';
+}
+
+// ── Capabilities ──────────────────────────────────────────────
+async function loadCapabilities() {
+  const data = await api('/capabilities/');
+  const grid = document.getElementById('cap-grid');
+  if (!data) { grid.innerHTML = '<div class="empty-state">API server not available.</div>'; return; }
+  document.getElementById('cap-version').textContent = 'Bot API ' + (data.api_version || '10.3');
+  grid.innerHTML = data.capabilities.map(cap => `
+    <div class="cap-item" title="${cap.method}">
+      <div class="cap-dot ${capClass(cap)}"></div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cap.capability.replace(/_/g,' ')}</span>
+      ${cap.available ? '' : cap.fallback !== '—' ? '<span class="text-3" style="font-size:10px">fallback</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function capClass(cap) {
+  if (cap.status === 'unsupported') return 'unsupported';
+  if (cap.status === 'future') return 'future';
+  if (cap.available) return cap.status === 'versioned' ? 'versioned' : 'available';
+  return 'future';
+}
+
+// ── Settings ──────────────────────────────────────────────────
+async function loadSettings() {
+  const flags = await api('/settings/features');
+  const el = document.getElementById('feature-flags');
+  if (!flags) { el.innerHTML = '<div class="text-3">Could not load feature flags.</div>'; return; }
+  el.innerHTML = Object.entries(flags).map(([name, info]) => `
+    <div class="toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" ${info.enabled ? 'checked' : ''} onchange="toggleFlag('${name}',this)">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+      <div class="toggle-label">
+        ${name}
+        <div class="toggle-meta">${info.description || ''}${info.min_api_version ? ` · API ${info.min_api_version}+` : ''}</div>
+      </div>
+    </div>
+    <div class="divider" style="margin:4px 0"></div>
+  `).join('');
+}
+
+async function toggleFlag(name, el) {
+  const result = await api(`/settings/features/${name}/toggle`, {method:'POST'});
+  if (result) {
+    toast(result.enabled ? `✅ ${name} enabled` : `🚫 ${name} disabled`, result.enabled ? 'success' : 'warning');
+  }
+}
+
+// ── Sources ───────────────────────────────────────────────────
+async function loadSources() {
+  const sources = await api('/sources/');
+  const tbody = document.getElementById('sources-body');
+  if (!sources || !sources.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📡</div><p>No sources. Add RSS feeds to auto-ingest content.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sources.map(s => `
+    <tr>
+      <td><b>${escHtml(s.name)}</b></td>
+      <td><span class="badge badge-blue">${s.type}</span></td>
+      <td class="text-2"><div class="truncate" style="max-width:180px">${escHtml(s.url)}</div></td>
+      <td class="text-3">${s.refresh_interval_seconds ? Math.round(s.refresh_interval_seconds/60)+'m' : '—'}</td>
+      <td class="text-3" style="font-size:11px">—</td>
+      <td>${s.enabled ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Disabled</span>'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="triggerFetch(${s.id})">🔄 Fetch</button></td>
+    </tr>
+  `).join('');
+}
+
+// ── Compose ───────────────────────────────────────────────────
+function onTextInput() {
+  const text = document.getElementById('compose-text').value;
+  const len = text.length;
+  const el = document.getElementById('char-count');
+  el.textContent = `${len} / 4096`;
+  el.className = 'char-count' + (len > 4000 ? ' over' : len > 3500 ? ' warn' : '');
+  // Live preview
+  document.getElementById('preview-bubble').innerHTML = text
+    ? text.replace(/\n/g,'<br>').substring(0,800)
+    : '<span style="color:var(--text2);font-size:12px">Your post will appear here…</span>';
+}
+
+async function loadComposeChannels() {
+  const channels = await api('/channels/');
+  if (!channels) return;
+  channelList = channels;
+  const sel = document.getElementById('channel-selector');
+  sel.innerHTML = channels.length ? channels.map(ch => `
+    <label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer">
+      <input type="checkbox" value="${ch.id}" class="compose-ch">
+      <span>📡 ${escHtml(ch.title || ch.username || 'Channel #'+ch.id)}</span>
+      ${ch.bot_is_admin ? '<span class="badge badge-green" style="margin-left:auto">Admin</span>' : '<span class="badge badge-red" style="margin-left:auto">No Access</span>'}
+    </label>
+  `).join('') : '<div class="text-3">No channels. Add channels first.</div>';
+
+  // Quick compose modal
+  const qSel = document.getElementById('quick-channel');
+  if (qSel) {
+    qSel.innerHTML = channels.map(ch => `<option value="${ch.id}">${ch.title || ch.username}</option>`).join('');
+  }
+}
+
+function fmt(type) {
+  const ta = document.getElementById('compose-text');
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.substring(start, end) || 'text';
+  const tags = {bold:'<b>',italic:'<i>',underline:'<u>',strike:'<s>',code:'<code>',spoiler:'<tg-spoiler>'};
+  const ctag = {bold:'</b>',italic:'</i>',underline:'</u>',strike:'</s>',code:'</code>',spoiler:'</tg-spoiler>'};
+  let replacement;
+  if (type === 'link') {
+    const url = prompt('Enter URL:','https://');
+    if (!url) return;
+    replacement = `<a href="${url}">${sel}</a>`;
+  } else {
+    replacement = (tags[type] || '') + sel + (ctag[type] || '');
+  }
+  ta.value = ta.value.substring(0,start) + replacement + ta.value.substring(end);
+  ta.focus();
+  onTextInput();
+}
+
+function insertEmoji() {
+  const emojis = ['🎨','🖌️','✨','💫','🌟','🔥','💥','🎯','🇪🇹','☕','🌍','🦁','🏔️'];
+  const emoji = emojis[Math.floor(Math.random()*emojis.length)];
+  const ta = document.getElementById('compose-text');
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0,pos) + emoji + ta.value.slice(pos);
+  onTextInput();
+}
+
+function insertHashtag() {
+  const tag = prompt('Hashtag:','art');
+  if (tag) {
+    const ta = document.getElementById('compose-text');
+    const pos = ta.selectionStart;
+    ta.value = ta.value.slice(0,pos) + ' #' + tag.replace('#','') + ta.value.slice(pos);
+    onTextInput();
+  }
+}
+
+async function saveDraft() {
+  const text = document.getElementById('compose-text').value.trim();
+  if (!text) { toast('Add some text first.','warning'); return; }
+  const channels = [...document.querySelectorAll('.compose-ch:checked')].map(el=>+el.value);
+  const result = await api('/posts/', {method:'POST', body: JSON.stringify({text, channel_ids:channels, post_type:'text'})});
+  if (result) { toast('✅ Draft saved #'+result.id,'success'); }
+}
+
+async function publishNow() {
+  const text = document.getElementById('compose-text').value.trim();
+  if (!text) { toast('Add some text first.','warning'); return; }
+  const channels = [...document.querySelectorAll('.compose-ch:checked')].map(el=>+el.value);
+  if (!channels.length) { toast('Select at least one channel.','warning'); return; }
+  const post = await api('/posts/', {method:'POST', body: JSON.stringify({text, channel_ids:channels, post_type:'text'})});
+  if (post) {
+    const result = await api(`/posts/${post.id}/publish`, {method:'POST'});
+    toast(result ? '🚀 Publishing! Check your channels.' : '❌ Publish failed.', result ? 'success' : 'error');
+  }
+}
+
+async function schedulePost() {
+  const text = document.getElementById('compose-text').value.trim();
+  if (!text) { toast('Add some text first.','warning'); return; }
+  const when = prompt('Schedule for (ISO datetime):',new Date(Date.now()+3600000).toISOString().slice(0,16));
+  if (!when) return;
+  const channels = [...document.querySelectorAll('.compose-ch:checked')].map(el=>+el.value);
+  const post = await api('/posts/', {method:'POST', body: JSON.stringify({
+    text, channel_ids:channels, post_type:'text', scheduled_at: when
+  })});
+  toast(post ? '📅 Scheduled for '+when.replace('T',' ') : '❌ Failed.', post ? 'success' : 'error');
+}
+
+async function runPreflight() {
+  toast('Preflight validation requires a saved post and target.','warning');
+}
+
+async function checkDuplicates() {
+  const text = document.getElementById('compose-text').value.trim();
+  if (!text) { toast('Add text first.','warning'); return; }
+  toast('Duplicate check runs server-side on publish.','warning');
+}
+
+function aiAssist() {
+  toast('⚠ AI feature disabled. Set FEATURE_AI=true in .env.','warning');
+}
+
+async function runAI() {
+  document.getElementById('ai-status').style.display = 'block';
+  document.getElementById('ai-output').innerHTML = '<div class="text-3 empty-state"><div class="icon">🤖</div><p>AI requires FEATURE_AI=true and an API key in .env</p></div>';
+}
+
+// ── Channel actions ───────────────────────────────────────────
+async function addChannel() {
+  const id = document.getElementById('new-channel-id').value.trim();
+  const title = document.getElementById('new-channel-title').value.trim();
+  if (!id) { toast('Enter a channel ID.','warning'); return; }
+  const telegram_id = id.startsWith('@') ? 0 : parseInt(id);
+  const result = await api('/channels/', {method:'POST', body: JSON.stringify({telegram_id, username: id.startsWith('@')?id.slice(1):null, title})});
+  if (result) {
+    toast('📡 Channel added! Running verification…','success');
+    closeModal('add-channel-modal');
+    await verifyChannel(result.id);
+    loadChannels();
+  } else {
+    toast('❌ Failed to add channel.','error');
+  }
+}
+
+async function verifyChannel(id) {
+  const result = await api(`/channels/${id}/verify`, {method:'POST'});
+  if (result) {
+    toast(result.passed ? '✅ Permissions verified' : '⚠ Permission issues: ' + result.checks?.filter(c=>!c.passed).map(c=>c.message).join(', '),'',result.passed?'success':'warning');
+    loadChannels();
+  }
+}
+
+async function removeChannel(id) {
+  if (!confirm('Remove this channel?')) return;
+  await api(`/channels/${id}`, {method:'DELETE'});
+  toast('Channel removed.','success');
+  loadChannels();
+}
+
+// ── Post actions ──────────────────────────────────────────────
+async function publishPostId(id) {
+  const result = await api(`/posts/${id}/publish`, {method:'POST'});
+  toast(result ? '🚀 Enqueued!':'❌ Failed.', result?'success':'error');
+}
+
+async function duplicatePost(id) {
+  const result = await api(`/posts/${id}/duplicate`, {method:'POST'});
+  toast(result ? '📋 Duplicated as #'+result.id:'❌ Failed.', result?'success':'error');
+  if (currentPage==='posts') loadPosts();
+}
+
+async function deletePost(id) {
+  if (!confirm('Archive this post?')) return;
+  await api(`/posts/${id}`, {method:'DELETE'});
+  toast('Post archived.','success');
+  loadPosts();
+}
+
+// ── Sources ───────────────────────────────────────────────────
+async function triggerFetch(id) {
+  await api(`/sources/${id}/fetch`, {method:'POST'});
+  toast('🔄 Fetch triggered.','success');
+}
+
+// ── Quick publish ─────────────────────────────────────────────
+async function quickPublish() {
+  const text = document.getElementById('quick-text').value.trim();
+  const chId = document.getElementById('quick-channel').value;
+  if (!text || !chId) { toast('Fill in text and select a channel.','warning'); return; }
+  const post = await api('/posts/', {method:'POST', body: JSON.stringify({text, channel_ids:[+chId], post_type:'text'})});
+  if (post) {
+    await api(`/posts/${post.id}/publish`, {method:'POST'});
+    toast('🚀 Publishing!','success');
+    closeModal('compose-modal');
+  }
+}
+
+async function saveQuickDraft() {
+  const text = document.getElementById('quick-text').value.trim();
+  if (!text) { toast('Add text.','warning'); return; }
+  const post = await api('/posts/', {method:'POST', body: JSON.stringify({text, channel_ids:[], post_type:'text'})});
+  if (post) { toast('💾 Draft #'+post.id+' saved.','success'); closeModal('compose-modal'); }
+}
+
+// ── Scheduler ─────────────────────────────────────────────────
+function onSchedTypeChange(type) {
+  document.getElementById('sched-datetime-group').style.display = type==='once'?'block':'none';
+  document.getElementById('sched-cron-group').style.display = type==='recurring'?'block':'none';
+}
+
+async function createSchedule() {
+  toast('Schedule creation requires a saved post ID.','warning');
+}
+
+// ── Health check ──────────────────────────────────────────────
+async function checkHealth() {
+  const r = await fetch('/ready').then(r=>r.json()).catch(()=>null);
+  if (r?.checks) {
+    const s = (id, ok) => document.getElementById(id)?.setAttribute('class', 'dot'+(ok?'':' red'));
+    s('h-telegram', r.checks.telegram==='ok');
+    s('h-database', r.checks.database==='ok');
+    s('h-redis',    r.checks.redis==='ok');
+    s('h-scheduler', true);
+    toast(r.status==='ready' ? '🟢 All systems operational' : '🔴 Issues detected', r.status==='ready'?'success':'error');
+  }
+}
+
+// ── Global search ──────────────────────────────────────────────
+function onSearch(q) {
+  if (q.length > 2) {
+    toast(`Search for "${q}" across all posts…`,'');
+  }
+}
+
+// ── Theme ──────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('[onclick="toggleTheme()"]').textContent = isDark ? '🌙' : '☀️';
+}
+
+// ── Modals ────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'compose-modal') loadComposeChannels();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open');
+});
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg, type='', duration=3500) {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type||'');
+  el.innerHTML = `<span style="font-size:15px">${type==='success'?'✅':type==='error'?'❌':type==='warning'?'⚠️':'ℹ️'}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+// ── Refresh ───────────────────────────────────────────────────
+function refreshData() { loadPageData(currentPage); toast('Refreshed','success'); }
+
+// ── Helpers ───────────────────────────────────────────────────
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.round(diff/60)+'m ago';
+  if (diff < 86400) return Math.round(diff/3600)+'h ago';
+  return d.toLocaleDateString();
+}
+
+function statusBadge(status) {
+  const map = {
+    draft:'badge-gray',approved:'badge-green',scheduled:'badge-blue',
+    publishing:'badge-yellow',published:'badge-green',failed:'badge-red',
+    pending_review:'badge-yellow',rejected:'badge-red',archived:'badge-gray'
+  };
+  return `<span class="badge ${map[status]||'badge-gray'}">${status}</span>`;
+}
+
+function addButton() {
+  const list = document.getElementById('buttons-list');
+  const i = list.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center';
+  div.innerHTML = `
+    <input class="form-input" placeholder="Button label" style="font-size:12px">
+    <input class="form-input" placeholder="URL or callback" style="font-size:12px">
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>
+  `;
+  if (list.firstElementChild?.classList.contains('text-3')) list.innerHTML = '';
+  list.appendChild(div);
+}
+
+function selectAllPosts(cb) {
+  document.querySelectorAll('#all-posts-body input[type=checkbox]').forEach(c => c.checked = cb.checked);
+}
+
+function onTypeChange(type) {
+  const preview = document.getElementById('preview-bubble');
+  const typeLabels = {photo:'🖼 Photo',video:'🎬 Video',audio:'🎵 Audio',
+    document:'📄 Document',animation:'🎞 GIF',media_group:'🖼🖼 Album',
+    poll:'🗳 Poll',rich:'⚡ Rich Message (API 10.1+)'};
+  if (type !== 'text') {
+    preview.innerHTML = `<span style="color:var(--text2)">${typeLabels[type]||type} post preview</span>`;
+  }
+}
+
+function uploadMedia(input) {
+  if (!input.files[0]) return;
+  toast('📤 Uploading '+input.files[0].name+'…','');
+  const form = new FormData();
+  form.append('file', input.files[0]);
+  fetch(API+'/media/upload', {method:'POST', body:form})
+    .then(r=>r.json())
+    .then(r => {
+      if (r?.id) toast('✅ Media uploaded: #'+r.id,'success');
+      else toast('❌ Upload failed.','error');
+    }).catch(() => toast('❌ Upload error.','error'));
+}
+
+function insertTemplate() { toast('Select a template to insert its content.',''); }
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  // Check for dry run mode
+  fetch('/version').then(r=>r.json()).then(v => {
+    if (v.dry_run) document.getElementById('dry-run-badge').style.display='flex';
+  }).catch(()=>{});
+  // Auto-refresh every 30 seconds
+  setInterval(() => { if (currentPage === 'dashboard') loadDashboard(); }, 30000);
+});
+</script>
+</body>
+</html>

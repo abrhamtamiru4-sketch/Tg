@@ -1,0 +1,159 @@
+version: "3.9"
+
+# ╔══════════════════════════════════════════════════════════╗
+# ║  TELEGRAM PUBLISHER — Docker Compose                    ║
+# ║  Production stack:                                       ║
+# ║    bot · api · worker · scheduler · postgres · redis     ║
+# ╚══════════════════════════════════════════════════════════╝
+
+x-common: &common
+  restart: unless-stopped
+  env_file: .env
+  networks:
+    - publisher_net
+
+x-backend: &backend
+  <<: *common
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - media_data:/app/media
+    - ./backend:/app/backend:ro
+  environment:
+    PYTHONPATH: /app/backend
+
+services:
+
+  # ── Bot (long-polling or webhook helper) ──────────────────
+  bot:
+    <<: *backend
+    container_name: publisher_bot
+    command: python backend/bot_main.py
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── API Server ────────────────────────────────────────────
+  api:
+    <<: *backend
+    container_name: publisher_api
+    command: >
+      uvicorn backend.main:app
+        --host 0.0.0.0
+        --port 8000
+        --workers 2
+        --log-config /dev/null
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Publisher Worker ──────────────────────────────────────
+  worker:
+    <<: *backend
+    container_name: publisher_worker
+    command: >
+      celery -A backend.app.workers.celery_app.celery
+        worker
+        --loglevel=info
+        --concurrency=4
+        --queues=publisher,media,analytics
+        --hostname=worker@%h
+    healthcheck:
+      test: ["CMD", "celery", "-A", "backend.app.workers.celery_app.celery", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Scheduler Worker (Beat + source/scheduler queues) ─────
+  scheduler:
+    <<: *backend
+    container_name: publisher_scheduler
+    command: >
+      celery -A backend.app.workers.celery_app.celery
+        worker
+        --beat
+        --loglevel=info
+        --concurrency=2
+        --queues=scheduler,source,ai
+        --hostname=scheduler@%h
+        --schedule=/tmp/celerybeat-schedule
+    volumes:
+      - celery_beat:/tmp
+
+  # ── PostgreSQL ────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: publisher_postgres
+    restart: unless-stopped
+    networks:
+      - publisher_net
+    environment:
+      POSTGRES_DB: telegram_publisher
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d telegram_publisher"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ─────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: publisher_redis
+    restart: unless-stopped
+    networks:
+      - publisher_net
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Database migration runner (runs once) ─────────────────
+  migrate:
+    <<: *backend
+    container_name: publisher_migrate
+    command: >
+      sh -c "
+        echo 'Waiting for DB...' &&
+        sleep 5 &&
+        python -m alembic upgrade head &&
+        echo 'Migrations complete'
+      "
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+  celery_beat:
+
+networks:
+  publisher_net:
+    driver: bridge

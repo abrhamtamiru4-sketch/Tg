@@ -1,0 +1,79 @@
+# ── Secrets — NEVER commit these ────────────────────────────
+.env
+.env.local
+.env.production
+.env.*.local
+*.pem
+*.key
+*.crt
+secrets/
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+pip-wheel-metadata/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# ── Virtual environments ──────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Database ──────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+publisher.db
+test_publisher.db
+
+# ── Media / uploads ───────────────────────────────────────────
+media/
+uploads/
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── IDE / Editor ──────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Celery ───────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+/tmp/celerybeat-schedule
+
+# ── Node (if frontend builds are added) ──────────────────────
+node_modules/
+.npm
+
+# ── Alembic ──────────────────────────────────────────────────
+# Keep migrations but not the local state file
+# (remove this line if you track local state)
+
+# ── Tests ────────────────────────────────────────────────────
+.pytest_cache/
+test_*.db
